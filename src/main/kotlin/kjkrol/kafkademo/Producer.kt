@@ -21,15 +21,13 @@ import javax.validation.Valid
 @Validated
 @Configuration
 @ConfigurationProperties("app.kafka.producer")
-internal class ProducerConfiguration {
-
-    @Valid
-    @NotEmpty
-    var bootstrapServers: String = ""
-
-    @Valid
-    @NotEmpty
-    var topic: String = ""
+internal class ProducerConfiguration(
+        @Valid
+        @NotEmpty
+        var bootstrapServers: String = "",
+        @Valid
+        @NotEmpty
+        var topic: String = "") {
 
     @Bean
     internal fun producerConfigs(): Map<String, Any> = hashMapOf(
@@ -45,7 +43,7 @@ internal class ProducerConfiguration {
 
     @Bean
     internal fun kafkaTemplate(): KafkaTemplate<String, VideoContent> {
-        val template : KafkaTemplate<String, VideoContent> = KafkaTemplate(producerFactory())
+        val template: KafkaTemplate<String, VideoContent> = KafkaTemplate(producerFactory())
         template.defaultTopic = topic
         return template
     }

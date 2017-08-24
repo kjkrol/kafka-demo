@@ -32,6 +32,7 @@ internal class ConsumerConfiguration(
         @Valid
         @NotEmpty
         var groupIdConfig: String = "") {
+    
     @Bean
     fun consumerConfig(): Map<String, Any> = hashMapOf(
             ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
