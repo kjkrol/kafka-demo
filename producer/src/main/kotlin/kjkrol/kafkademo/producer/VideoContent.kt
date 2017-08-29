@@ -1,4 +1,4 @@
-package kjkrol.kafkademo
+package kjkrol.kafkademo.producer
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.util.UUID

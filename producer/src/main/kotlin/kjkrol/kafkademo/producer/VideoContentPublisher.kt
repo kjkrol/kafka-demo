@@ -1,5 +1,6 @@
-package kjkrol.kafkademo
+package kjkrol.kafkademo.producer
 
+import kafka.message.CompressionCodec
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringSerializer
 import org.hibernate.validator.constraints.NotEmpty
@@ -21,7 +22,7 @@ import javax.validation.Valid
 @Validated
 @Configuration
 @ConfigurationProperties("app.kafka.producer")
-internal class ProducerConfiguration(
+internal class VideoContentPublisherConfiguration(
         @Valid
         @NotEmpty
         var bootstrapServers: String = "",
@@ -30,15 +31,16 @@ internal class ProducerConfiguration(
         var topic: String = "") {
 
     @Bean
-    internal fun producerConfigs(): Map<String, Any> = hashMapOf(
+    internal fun configs(): Map<String, Any> = hashMapOf(
             ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
             ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
-            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to JsonSerializer::class.java
+            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to JsonSerializer::class.java,
+            ProducerConfig.COMPRESSION_TYPE_CONFIG to "gzip"
     )
 
     @Bean
     internal fun producerFactory(): ProducerFactory<String, VideoContent> {
-        return DefaultKafkaProducerFactory(producerConfigs())
+        return DefaultKafkaProducerFactory(configs())
     }
 
     @Bean
@@ -51,10 +53,10 @@ internal class ProducerConfiguration(
 }
 
 @Service
-internal class Producer(val template: KafkaTemplate<String, VideoContent>) {
+internal class VideoContentPublisher(private val template: KafkaTemplate<String, VideoContent>) {
 
     private companion object {
-        val log: Logger = LoggerFactory.getLogger(Producer::class.java)
+        val log: Logger = LoggerFactory.getLogger(VideoContentPublisher::class.java)
     }
 
     internal fun publish(videoContent: VideoContent): ListenableFuture<SendResult<String, VideoContent>> {

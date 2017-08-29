@@ -1,7 +1,8 @@
-package kjkrol.kafkademo
+package kjkrol.kafkademo.consumer
 
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.hibernate.validator.constraints.NotEmpty
 import org.slf4j.Logger
@@ -14,25 +15,24 @@ import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
 import org.springframework.kafka.core.ConsumerFactory
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
+import org.springframework.kafka.listener.ConsumerSeekAware
 import org.springframework.kafka.support.serializer.JsonDeserializer
 import org.springframework.stereotype.Service
 import org.springframework.validation.annotation.Validated
-import java.util.concurrent.CountDownLatch
 import javax.validation.Valid
-
 
 @Validated
 @ConfigurationProperties("app.kafka.consumer")
 @Configuration
 @EnableKafka
-internal class ConsumerConfiguration(
+internal class VideoContentConsumerConfiguration(
         @Valid
         @NotEmpty
         var bootstrapServers: String = "",
         @Valid
         @NotEmpty
         var groupIdConfig: String = "") {
-    
+
     @Bean
     fun consumerConfig(): Map<String, Any> = hashMapOf(
             ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
@@ -52,23 +52,24 @@ internal class ConsumerConfiguration(
     fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<String, VideoContent> {
         val factory: ConcurrentKafkaListenerContainerFactory<String, VideoContent> = ConcurrentKafkaListenerContainerFactory()
         factory.consumerFactory = consumerFactory()
+        factory.setConcurrency(3)
+        factory.containerProperties.pollTimeout = 3000
+        factory.isBatchListener = true
         return factory
     }
 
 }
 
 @Service
-class Consumer {
+class VideoContentConsumer {
+
     private companion object {
-        val log: Logger = LoggerFactory.getLogger(Consumer::class.java)
+        val log: Logger = LoggerFactory.getLogger(VideoContentConsumer::class.java)
     }
 
-    internal val latch = CountDownLatch(3)
-
-    @KafkaListener(topics = arrayOf("\${app.kafka.consumer.topic}"))
+    @KafkaListener(topics = arrayOf("\${app.kafka.consumer.topic}"), containerFactory = "kafkaListenerContainerFactory")
     @Throws(Exception::class)
-    internal fun listen(consumerRecord: ConsumerRecord<String, VideoContent>) {
-        log.info("consuming {}", consumerRecord)
-        latch.countDown()
+    internal fun listen(consumerRecords: List<ConsumerRecord<String, VideoContent>>) {
+        log.info("consuming {}", consumerRecords)
     }
 }
