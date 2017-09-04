@@ -1,6 +1,5 @@
 package kjkrol.kafkademo.producer
 
-import kafka.message.CompressionCodec
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringSerializer
 import org.hibernate.validator.constraints.NotEmpty
@@ -12,11 +11,10 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.kafka.core.DefaultKafkaProducerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.core.ProducerFactory
-import org.springframework.kafka.support.SendResult
 import org.springframework.kafka.support.serializer.JsonSerializer
 import org.springframework.stereotype.Service
-import org.springframework.util.concurrent.ListenableFuture
 import org.springframework.validation.annotation.Validated
+import java.io.Serializable
 import javax.validation.Valid
 
 @Validated
@@ -31,7 +29,7 @@ internal class VideoContentPublisherConfiguration(
         var topic: String = "") {
 
     @Bean
-    internal fun configs(): Map<String, Any> = hashMapOf(
+    internal fun configs(): Map<String, Serializable> = hashMapOf(
             ProducerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
             ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
             ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to JsonSerializer::class.java,
@@ -59,8 +57,9 @@ internal class VideoContentPublisher(private val template: KafkaTemplate<String,
         val log: Logger = LoggerFactory.getLogger(VideoContentPublisher::class.java)
     }
 
-    internal fun publish(videoContent: VideoContent): ListenableFuture<SendResult<String, VideoContent>> {
+    internal fun publish(videoContent: VideoContent): Boolean {
         log.info("publishing {}", videoContent)
-        return template.sendDefault(videoContent)
+        return template.executeInTransaction { it.sendDefault(videoContent).isDone }
     }
+
 }
