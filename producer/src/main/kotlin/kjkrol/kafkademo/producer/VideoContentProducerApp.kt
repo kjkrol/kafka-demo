@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 import org.springframework.context.annotation.Bean
 import java.util.UUID
 
@@ -13,7 +14,7 @@ fun main(args: Array<String>) {
     SpringApplication.run(VideoContentProducerApp::class.java, *args)
 }
 
-@SpringBootApplication
+@SpringBootApplication(exclude = arrayOf(DataSourceAutoConfiguration::class))
 class VideoContentProducerApp {
 
     private companion object {
