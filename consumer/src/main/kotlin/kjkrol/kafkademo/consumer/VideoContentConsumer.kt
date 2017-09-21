@@ -14,10 +14,11 @@ class VideoContentConsumer {
     }
 
     @KafkaListener(topics = arrayOf("\${app.kafka.consumer.topic}"), containerFactory = "kafkaListenerContainerFactory")
-    @Throws(Exception::class)
     internal fun listen(consumerRecords: ConsumerRecord<String, VideoContent>, ack: Acknowledgment) {
         log.info("consuming {}", consumerRecords)
-        ack.acknowledge()
+        val isFine: Boolean = true
+        if (isFine) ack.acknowledge()
+        else throw Exception("Special exception for you!")
     }
 
 }

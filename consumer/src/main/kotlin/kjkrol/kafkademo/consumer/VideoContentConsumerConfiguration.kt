@@ -3,7 +3,6 @@ package kjkrol.kafkademo.consumer
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
-import javax.validation.constraints.NotNull
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -13,12 +12,11 @@ import org.springframework.kafka.core.ConsumerFactory
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 import org.springframework.kafka.listener.AbstractMessageListenerContainer
 import org.springframework.kafka.support.serializer.JsonDeserializer
-import java.io.Serializable
-import javax.validation.Valid
-import org.xerial.snappy.buffer.DefaultBufferAllocator.factory
 import org.springframework.retry.policy.SimpleRetryPolicy
 import org.springframework.retry.support.RetryTemplate
-
+import java.io.Serializable
+import javax.validation.Valid
+import javax.validation.constraints.NotNull
 
 
 @ConfigurationProperties("app.kafka.consumer")
@@ -45,11 +43,11 @@ internal class VideoContentConsumerConfiguration(
         factory.setConcurrency(1)
         factory.isBatchListener = false
         factory.containerProperties.pollTimeout = 3000
-        factory.containerProperties.ackMode = AbstractMessageListenerContainer.AckMode.MANUAL_IMMEDIATE
+        factory.containerProperties.ackMode = AbstractMessageListenerContainer.AckMode.MANUAL
 
         val rt = RetryTemplate()
         val srp = SimpleRetryPolicy()
-        srp.maxAttempts = 10
+        srp.maxAttempts = 2
         rt.setRetryPolicy(srp)
         factory.setRetryTemplate(rt)
 
